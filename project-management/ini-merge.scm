@@ -36,30 +36,33 @@
 
        #:phases
        (modify-phases %standard-phases
-         (add-after 'install 'make-bin
+         (add-after 'install 'make-bin-and-wrap
            (lambda* (#:key inputs outputs #:allow-other-keys)
-             (let* ((out   (assoc-ref outputs "out"))
-                    (bin   (string-append out "/bin"))
-                    (prog  (string-append bin "/ini-merge"))
-                    (guile (search-input-file inputs "/bin/guile"))
-                    (sh    (search-input-file inputs "/bin/sh")))
+             (let* ((out     (assoc-ref outputs "out"))
+                    (bin     (string-append out "/bin"))
+                    (prog    (string-append bin "/ini-merge"))
+                    (guile   (search-input-file inputs "/bin/guile"))
+                    (version "3.0") 
+                    (scm-path (string-append out "/share/guile/site/" version))
+                    (go-path  (string-append out "/lib/guile/" version "/site-ccache"))
+                    (ini-pkg  (assoc-ref inputs "guile-ini"))
+                    (ini-scm  (string-append ini-pkg "/share/guile/site/" version))
+                    (ini-go   (string-append ini-pkg "/lib/guile/" version "/site-ccache")))
 
                (mkdir-p bin)
 
                (call-with-output-file prog
                  (lambda (p)
-                   (format p
-                           "#!~a~%
-export GUILE_LOAD_PATH=\"~a/share/guile/site/3.0${GUILE_LOAD_PATH:+:}$GUILE_LOAD_PATH\"~%
-export GUILE_LOAD_COMPILED_PATH=\"~a/lib/guile/3.0/site-ccache${GUILE_LOAD_COMPILED_PATH:+:}$GUILE_LOAD_COMPILED_PATH\"~%
-exec ~a -s ~a/share/ini-merge/main.scm \"$@\"~%"
-                           sh
-                           out
-                           out
-                           guile
-                           out)))
-
+                   (format p "#!/bin/sh\nexec ~a --no-auto-compile -s  ~a/share/ini-merge/main.scm \"$@\"\n"
+                           guile out)))
                (chmod prog #o555)
+
+               ;; ИСПРАВЛЕНО: пути объединены в один вложенный список (,scm-path ,ini-scm)
+               (wrap-program prog
+                 `("GUILE_LOAD_PATH" prefix
+                   (,scm-path ,ini-scm))
+                 `("GUILE_LOAD_COMPILED_PATH" prefix
+                   (,go-path ,ini-go)))
                #t))))))
 
     (propagated-inputs
