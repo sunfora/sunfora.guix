@@ -11,7 +11,7 @@
 (define-public ini-merge
   (package
     (name "ini-merge")
-    (version "1.0.0")
+    (version "1.0.1")
 
     (source
      (origin
@@ -19,11 +19,11 @@
        (uri
         (git-reference
          (url "https://github.com/sunfora/ini-merge")
-         (commit "main")))
+         (commit "8e8f382a6c5c7532c8ca231e4a2155df65827805")))
        (file-name (git-file-name name version))
        (sha256
         (base32
-         "0pi0vzsm49v0ng4vm53ds014dq9b0fibyphvb1ksz12wmw27x329"))))
+         "0zylimfpajmng70p623c04za70b7hl5n0g6padaf2sprkypfzykv"))))
 
     (build-system copy-build-system)
 
