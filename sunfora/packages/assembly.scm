@@ -48,7 +48,7 @@
                          ghostscript))
     (arguments
       (list
-        #:test-target "test"
+        #:test-target "travis"
         #:phases
         #~(modify-phases %standard-phases
             (add-after 'unpack 'set-env-for-reproducibile-build
