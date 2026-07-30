@@ -105,6 +105,20 @@
      (list #:tests? #f                           ;Tests require network access
            #:phases
            #~(modify-phases %standard-phases
+              ;; Make a reproducible binary and -v message somewhat nicer
+              (add-before 'configure 'fix-timestamps
+                (lambda _
+                  (define (enquote str) (format #f "~s" str))
+                  (substitute* "Makefile"
+                    (("BUILD_TIMESTAMP := .*")
+                     (format #f "BUILD_TIMESTAMP := -DBUILD_TIMESTAMP=~s\n"
+                             (enquote "guix")))
+                    (("BLINK_COMMITS := .*") 
+                     (format #f "BLINK_COMMITS := -DBLINK_COMMITS=~s\n"
+                             (enquote "?")))
+                    (("BLINK_GITSHA := .*") 
+                     (format #f "BLINK_GITSHA := -DBLINK_GITSHA=~s\n"
+                             (enquote #$version))))))
                ;; Call ./configure without --enable-fast-install argument, which
                ;; causes the script to fail with an "unsupported option" error.
                (replace 'configure
