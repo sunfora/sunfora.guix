@@ -13,7 +13,8 @@
   #:use-module (gnu packages python)
   #:use-module (gnu packages autotools)
   #:use-module (gnu packages docbook)
-  #:use-module (guix gexp))
+  #:use-module (guix gexp)
+  #:use-module (guix utils))
 
 (define-public nasm-next
   (package (inherit nasm)
@@ -84,3 +85,31 @@
                (lambda _
                  (invoke "make" "install_doc"))))))))
 
+(define-public blinkenlights-110
+  (package (inherit blinkenlights)
+    (name "blinkenlights")
+    (version "1.1.0")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://github.com/jart/blink")
+                    (commit version)))
+              (sha256
+               (base32
+                "0wlp1hqccbh9jl4h0vyv9kqbff4ccls6kgzz62gnsqnfsmz06273"))
+              (file-name (git-file-name name version))))
+    (native-inputs
+     (modify-inputs (package-native-inputs blinkenlights)
+       (prepend python-wrapper)))
+    (arguments
+     (list #:tests? #f                           ;Tests require network access
+           #:phases
+           #~(modify-phases %standard-phases
+               ;; Call ./configure without --enable-fast-install argument, which
+               ;; causes the script to fail with an "unsupported option" error.
+               (replace 'configure
+                 (lambda* (#:key inputs outputs #:allow-other-keys)
+                   (invoke "sh" "configure"
+                           (string-append "CC=" #$(cc-for-target))
+                           (string-append "--prefix="
+                                          (assoc-ref outputs "out"))))))))))
