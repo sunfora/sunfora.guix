@@ -15,10 +15,10 @@
         (method git-fetch)
         (uri (git-reference
                (url "https://github.com/sunfora/readline")
-               (commit "122ef9ab085f")))
+               (commit "77b820f26d5e2ae3e107c830a5ee18c3d26136f2")))
         (file-name (git-file-name name version))
         (sha256
-          (base32 "17xrlbrfr72q60gjw7j6v227jydax7p0n1rnqf5fxz5bxjfaf87q"))))
+          (base32 "1k8d7sr3s86y4g86k2343cjz3h2hb2b84g4bqqgqyc4gfah2i3xw"))))
  (arguments
      (list #:make-flags #~'("SHLIB_LIBS=-lncurses")
            #:configure-flags #~'("--with-curses")))))
