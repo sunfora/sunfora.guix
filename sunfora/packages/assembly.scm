@@ -105,25 +105,22 @@
      (list #:tests? #f                           ;Tests require network access
            #:phases
            #~(modify-phases %standard-phases
-              ;; Make a reproducible binary and -v message somewhat nicer
-              (add-before 'configure 'fix-timestamps
+              ;; Make build reproducible and -v message somewhat nicer
+              (add-before 'configure 'make-reproducible
                 (lambda _
-                  (define (enquote str) (format #f "~s" str))
                   (substitute* "Makefile"
-                    (("BUILD_TIMESTAMP := .*")
-                     (format #f "BUILD_TIMESTAMP := -DBUILD_TIMESTAMP=~s\n"
-                             (enquote "guix")))
-                    (("BLINK_COMMITS := .*") 
-                     (format #f "BLINK_COMMITS := -DBLINK_COMMITS=~s\n"
-                             (enquote "?")))
-                    (("BLINK_GITSHA := .*") 
-                     (format #f "BLINK_GITSHA := -DBLINK_GITSHA=~s\n"
-                             (enquote #$version))))))
+                    (("shell LC_ALL=C TZ=UTC date" date)
+                     (string-append date " -d \"@$(SOURCE_DATE_EPOCH)\""))
+                    ;; BLINK_COMMITS and BLINK_GITSHA fall back
+                    ;; to *_UNKNOWN with a compiler warning.
+                    (("^BLINK_COMMITS := .*") "")
+                    (("^BLINK_GITSHA := .*") ""))
+                  (substitute* '("Makefile" "configure")
+                    (("hostname") "echo guix"))))
                ;; Call ./configure without --enable-fast-install argument, which
                ;; causes the script to fail with an "unsupported option" error.
                (replace 'configure
                  (lambda* (#:key inputs outputs #:allow-other-keys)
-                   (invoke "sh" "configure"
+                   (invoke "./configure"
                            (string-append "CC=" #$(cc-for-target))
-                           (string-append "--prefix="
-                                          (assoc-ref outputs "out"))))))))))
+                           (string-append "--prefix=" #$output)))))))))
